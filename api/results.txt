@@ -1,4 +1,0 @@
-[dev-1] uptime 100.000000% | avgUploadTime 5s
-[dev-1] uptime 100.000000% | avgUploadTime 5s
-[dev-1] uptime 100.000000% | avgUploadTime 5s
-[dev-1] uptime 100.000000% | avgUploadTime 5s
