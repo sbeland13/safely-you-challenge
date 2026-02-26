@@ -1,7 +1,9 @@
 package store
 
 import (
+	"encoding/csv"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 )
@@ -25,15 +27,51 @@ func NewStore() *ServerStore {
 	return &ServerStore{}
 }
 
-// getOrCreateDevice retrieves or creates the data store for a given device ID
-func (s *ServerStore) getOrCreateDevice(deviceID string) *DeviceData {
-	data, _ := s.DeviceMap.LoadOrStore(deviceID, &DeviceData{})
-	return data.(*DeviceData)
+// RegisterDevice manually adds an allowed device to the memory store
+func (s *ServerStore) RegisterDevice(deviceID string) {
+	s.DeviceMap.Store(deviceID, &DeviceData{})
+}
+
+// LoadDevices reads a CSV file to pre-populate allowed valid device IDs
+func (s *ServerStore) LoadDevices(filepath string) error {
+	f, err := os.Open(filepath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	reader := csv.NewReader(f)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return err
+	}
+
+	for i, row := range records {
+		if i == 0 {
+			continue // skip header
+		}
+		if len(row) > 0 {
+			s.RegisterDevice(row[0])
+		}
+	}
+	return nil
+}
+
+// GetDevice retrieves the data store for a given device ID
+func (s *ServerStore) GetDevice(deviceID string) (*DeviceData, error) {
+	data, ok := s.DeviceMap.Load(deviceID)
+	if !ok {
+		return nil, fmt.Errorf("device not found")
+	}
+	return data.(*DeviceData), nil
 }
 
 // RecordHeartbeat adds a heartbeat to a device's record
-func (s *ServerStore) RecordHeartbeat(deviceID string, sentAt time.Time) {
-	device := s.getOrCreateDevice(deviceID)
+func (s *ServerStore) RecordHeartbeat(deviceID string, sentAt time.Time) error {
+	device, err := s.GetDevice(deviceID)
+	if err != nil {
+		return err
+	}
 	device.mu.Lock()
 	defer device.mu.Unlock()
 
@@ -48,15 +86,20 @@ func (s *ServerStore) RecordHeartbeat(deviceID string, sentAt time.Time) {
 	if device.LastHeartbeat.IsZero() || sentAt.After(device.LastHeartbeat) {
 		device.LastHeartbeat = sentAt
 	}
+	return nil
 }
 
 // RecordUpload adds an upload duration to a device's record
-func (s *ServerStore) RecordUpload(deviceID string, sentAt time.Time, uploadTime int64) {
-	device := s.getOrCreateDevice(deviceID)
+func (s *ServerStore) RecordUpload(deviceID string, sentAt time.Time, uploadTime int64) error {
+	device, err := s.GetDevice(deviceID)
+	if err != nil {
+		return err
+	}
 	device.mu.Lock()
 	defer device.mu.Unlock()
 
 	device.UploadTimes = append(device.UploadTimes, uploadTime)
+	return nil
 }
 
 // GetStats calculates and returns the uptime and average upload time

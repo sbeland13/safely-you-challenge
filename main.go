@@ -13,6 +13,10 @@ func main() {
 	fmt.Println("Starting Fleet Metrics Server on port 6733...")
 	
 	serverStore := store.NewStore()
+	if err := serverStore.LoadDevices("devices.csv"); err != nil {
+		log.Fatalf("Warning: failed to load devices.csv: %v", err)
+	}
+
 	apiServer := api.NewServer(serverStore)
 
 	// Route multiplexing

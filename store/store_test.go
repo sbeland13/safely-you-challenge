@@ -10,6 +10,7 @@ import (
 func TestStore_Heartbeats(t *testing.T) {
 	s := NewStore()
 	deviceID := "test-device"
+	s.RegisterDevice(deviceID)
 	now := time.Now()
 
 	s.RecordHeartbeat(deviceID, now.Add(-2*time.Minute))
@@ -30,6 +31,7 @@ func TestStore_Heartbeats(t *testing.T) {
 func TestStore_Heartbeats_Missing(t *testing.T) {
 	s := NewStore()
 	deviceID := "test-device"
+	s.RegisterDevice(deviceID)
 	now := time.Now()
 
 	s.RecordHeartbeat(deviceID, now.Add(-5*time.Minute))
@@ -52,6 +54,7 @@ func TestStore_Heartbeats_Missing(t *testing.T) {
 func TestStore_Heartbeats_OnePing(t *testing.T) {
 	s := NewStore()
 	deviceID := "test-device"
+	s.RegisterDevice(deviceID)
 	now := time.Now()
 
 	s.RecordHeartbeat(deviceID, now)
@@ -70,6 +73,7 @@ func TestStore_Heartbeats_OnePing(t *testing.T) {
 func TestStore_UploadStats(t *testing.T) {
 	s := NewStore()
 	deviceID := "test-device"
+	s.RegisterDevice(deviceID)
 	now := time.Now()
 
 	s.RecordHeartbeat(deviceID, now) // Needed otherwise GetStats fails
@@ -91,6 +95,7 @@ func TestStore_UploadStats(t *testing.T) {
 func TestStore_Concurrency(t *testing.T) {
 	s := NewStore()
 	deviceID := "test-device"
+	s.RegisterDevice(deviceID)
 	now := time.Now()
 
 	var wg sync.WaitGroup
@@ -121,6 +126,7 @@ func TestStore_Concurrency(t *testing.T) {
 func BenchmarkGetStats(b *testing.B) {
 	s := NewStore()
 	deviceID := "test-device"
+	s.RegisterDevice(deviceID)
 	now := time.Now()
 
 	s.RecordHeartbeat(deviceID, now.Add(-5*time.Minute))

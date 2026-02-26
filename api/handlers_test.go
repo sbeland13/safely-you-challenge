@@ -13,7 +13,9 @@ import (
 )
 
 func setupTestServer() *Server {
-	return NewServer(store.NewStore())
+	s := store.NewStore()
+	s.RegisterDevice("dev-1")
+	return NewServer(s)
 }
 
 func TestHandleHeartbeat_Success(t *testing.T) {

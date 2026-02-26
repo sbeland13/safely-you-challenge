@@ -42,7 +42,14 @@ func (s *Server) HandleHeartbeat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.Store.RecordHeartbeat(deviceID, req.SentAt)
+	if err := s.Store.RecordHeartbeat(deviceID, req.SentAt); err != nil {
+		if fmt.Sprint(err) == "device not found" {
+			writeError(w, http.StatusNotFound, "device not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -73,7 +80,14 @@ func (s *Server) handlePostStats(deviceID string, w http.ResponseWriter, r *http
 		return
 	}
 
-	s.Store.RecordUpload(deviceID, req.SentAt, req.UploadTime)
+	if err := s.Store.RecordUpload(deviceID, req.SentAt, req.UploadTime); err != nil {
+		if fmt.Sprint(err) == "device not found" {
+			writeError(w, http.StatusNotFound, "device not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
